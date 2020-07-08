@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--扫描spring注解，只扫描service，不扫描controller(controller有独立配置)-->
+    <context:component-scan base-package="com.xiaotian.ssm.service"/>
+    <!--配置数据库-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/xiaotian?useUnicode=ture&amp;characterEncoding=utf8"/>
+        <property name="username" value="xiaotian"/>
+        <property name="password" value="xiaotian"/>
+    </bean>
+    <!--配置mybaits SqlSession-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:mybatis.xml"/>
+    </bean>
+    <!--扫描mapper文件-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.xiaotian.ssm.mapper"/>
+    </bean>
+    <!--平台事务管理器-->
+    <bean id="dataSourceTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--增强通知-->
+    <tx:advice id="txAdvice" transaction-manager="dataSourceTransactionManager">
+        <tx:attributes>
+            <!--默认crud-->
+            <tx:method name="read*" read-only="true" propagation="SUPPORTS"/>
+            <tx:method name="create*"/>
+            <tx:method name="delete*"/>
+            <tx:method name="update*"/>
+            <!--自定义-->
+            <tx:method name="get*" read-only="true" propagation="SUPPORTS"/>
+            <tx:method name="add*"/>
+        </tx:attributes>
+    </tx:advice>
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* com.xiaotian.ssm..service..*.*(..))"/>
+    </aop:config>
+
+</beans>
